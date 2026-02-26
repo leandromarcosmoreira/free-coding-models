@@ -50,3 +50,8 @@ Thumbs.db
 
 # 11. Local-only telemetry POC (kept out of this repo on purpose)
 private-telemetry/
+
+
+# Added by cargo
+
+/target

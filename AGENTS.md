@@ -1,93 +1,93 @@
-# Agent Instructions
+# Instruções para Agentes
 
-## Post-Feature Testing
+## Testes Pós-Recurso
 
-After completing any feature or fix, the agent MUST:
+Após concluir qualquer recurso ou correção, o agente DEVE:
 
-1. Run `pnpm test` to verify all unit tests pass (62 tests across 11 suites)
-2. If any test fails, fix the issue immediately
-3. Re-run `pnpm test` until all tests pass
-4. Run `pnpm start` to verify there are no runtime errors
-5. If there are errors, fix them immediately
-6. Re-run `pnpm start` until all errors are resolved
-7. Only then consider the task complete
+1. Executar `pnpm test` para verificar se todos os testes unitários passam (62 testes em 11 suítes)
+2. Se algum teste falhar, corrija o problema imediatamente
+3. Execute novamente `pnpm test` até que todos os testes passem
+4. Execute `pnpm start` para verificar se não há erros em tempo de execução
+5. Se houver erros, corrija-os imediatamente
+6. Execute novamente `pnpm start` até que todos os erros sejam resolvidos
+7. Só então considere a tarefa concluída
 
-This ensures the codebase remains in a working state at all times.
+Isso garante que a base de código permaneça em um estado funcional em todos os momentos.
 
-## Release Process (MANDATORY)
+## Processo de Lançamento (OBRIGATÓRIO)
 
-When releasing a new version, follow this exact process:
+Ao lançar uma nova versão, siga exatamente este processo:
 
-1. **Version Check**: Check if version already exists with `git log --oneline | grep "^[a-f0-9]\+ [0-9]"`
-2. **Version Bump**: Update version in `package.json` (e.g., `0.1.16` → `0.1.17`)
-3. **Commit ALL Changed Files**: `git add . && git commit -m "0.1.17"`
-   - Always commit with just the version number as the message (e.g., "0.1.17")
-   - Include ALL modified files in the commit (bin/, lib/, test/, README.md, CHANGELOG.md, etc.)
-4. **Push**: `git push origin main` — GitHub Actions will auto-publish to npm
-5. **Wait for npm Publish":
+1. **Verificação de Versão**: Verifique se a versão já existe com `git log --oneline | grep "^[a-f0-9]\+ [0-9]"`
+2. **Incremento de Versão**: Atualize a versão no `package.json` (ex: `0.1.16` → `0.1.17`)
+3. **Commit de TODOS os Arquivos Alterados**: `git add . && git commit -m "0.1.17"`
+   - Sempre faça o commit apenas com o número da versão como mensagem (ex: "0.1.17")
+   - Inclua TODOS os arquivos modificados no commit (bin/, lib/, test/, README.md, CHANGELOG.md, etc.)
+4. **Push**: `git push origin main` — O GitHub Actions publicará automaticamente no npm
+5. **Aguardar Publicação no npm**:
    ```bash
    for i in $(seq 1 30); do sleep 10; v=$(npm view free-coding-models version 2>/dev/null); echo "Attempt $i: npm version = $v"; if [ "$v" = "0.1.17" ]; then echo "✅ published!"; break; fi; done
    ```
-5. **Install and Verify**: `npm install -g free-coding-models@0.1.17`
-6. **Test Binary**: `free-coding-models --help` (or any other command to verify it works)
-7. **Only when the global npm-installed version works → the release is confirmed**
+5. **Instalar e Verificar**: `npm install -g free-coding-models@0.1.17`
+6. **Testar Binário**: `free-coding-models --help` (ou qualquer outro comando para verificar se funciona)
+7. **Somente quando a versão instalada globalmente via npm funcionar → o lançamento é confirmado**
 
-**Why:** A local `npm install -g .` can mask issues because it symlinks the repo. The real npm package is a tarball built from the `files` field — only a real npm install will catch missing files.
+**Por quê:** Um `npm install -g .` local pode mascarar problemas porque ele cria um link simbólico para o repositório. O pacote npm real é um tarball construído a partir do campo `files` — apenas uma instalação real do npm pegará arquivos ausentes.
 
-## Real-World npm Verification (MANDATORY for every fix/feature)
+## Verificação npm em Mundo Real (OBRIGATÓRIO para cada correção/recurso)
 
-**Never trust local-only testing.** `pnpm start` runs from the repo and won't catch missing files in the published package. Always run the full npm verification:
+**Nunca confie apenas em testes locais.** `pnpm start` roda a partir do repositório e não pegará arquivos ausentes no pacote publicado. Sempre execute a verificação npm completa:
 
-1. Bump version in `package.json` (e.g. `0.1.14` → `0.1.15`)
-2. Commit and push to `main` — GitHub Actions auto-publishes to npm
-3. Wait for the new version to appear on npm:
+1. Incremente a versão no `package.json` (ex: `0.1.14` → `0.1.15`)
+2. Commit e push para `main` — O GitHub Actions publica automaticamente no npm
+3. Aguarde a nova versão aparecer no npm:
    ```bash
-   # Poll until npm has the new version
+   # Poll até que o npm tenha a nova versão
    for i in $(seq 1 30); do sleep 10; v=$(npm view free-coding-models version 2>/dev/null); echo "Attempt $i: npm version = $v"; if [ "$v" = "NEW_VERSION" ]; then echo "✅ published!"; break; fi; done
    ```
-4. Install the published version globally:
+4. Instale a versão publicada globalmente:
    ```bash
    npm install -g free-coding-models@NEW_VERSION
    ```
-5. Run the global binary and verify it works:
+5. Execute o binário global e verifique se funciona:
    ```bash
    free-coding-models
    ```
-6. Only if the global npm-installed version works → the fix is confirmed
+6. Somente se a versão instalada globalmente via npm funcionar → a correção é confirmada
 
-**Why:** A local `npm install -g .` can mask issues because it symlinks the repo. The real npm package is a tarball built from the `files` field — if something is missing there, only a real npm install will catch it.
+**Por quê:** Um `npm install -g .` local pode mascarar problemas porque ele cria um link simbólico para o repositório. O pacote npm real é um tarball construído a partir do campo `files` — se algo estiver faltando lá, apenas uma instalação real do npm pegará.
 
-## Test Architecture
+## Arquitetura de Teste
 
-- Tests live in `test/test.js` using Node.js built-in `node:test` + `node:assert` (zero deps)
-- Pure logic functions are in `lib/utils.js` (extracted from the main CLI for testability)
-- The main CLI (`bin/free-coding-models.js`) imports from `lib/utils.js`
-- If you add new pure logic (calculations, parsing, filtering), add it to `lib/utils.js` and write tests
-- If you modify existing logic in `lib/utils.js`, update the corresponding tests
+- Os testes residem em `test/test.js` usando o `node:test` integrado do Node.js + `node:assert` (zero dependências)
+- Funções de lógica pura estão em `lib/utils.js` (extraídas do CLI principal para testabilidade)
+- O CLI principal (`bin/free-coding-models.js`) importa de `lib/utils.js`
+- Se você adicionar nova lógica pura (cálculos, parsing, filtragem), adicione-a a `lib/utils.js` e escreva testes
+- Se você modificar lógica existente em `lib/utils.js`, atualize os testes correspondentes
 
-### What's tested:
-- **sources.js data integrity** — model structure, valid tiers, no duplicates, count consistency
-- **Core logic** — getAvg, getVerdict, getUptime, filterByTier, sortResults, findBestModel
-- **CLI arg parsing** — all flags (--best, --fiable, --opencode, --openclaw, --tier)
-- **Package sanity** — package.json fields, bin entry exists, shebang, ESM imports
+### O que é testado:
+- **Integridade de dados de sources.js** — estrutura do modelo, camadas válidas, sem duplicatas, consistência de contagem
+- **Lógica principal** — getAvg, getVerdict, getUptime, filterByTier, sortResults, findBestModel
+- **Parsing de argumentos CLI** — todas as flags (--best, --fiable, --opencode, --openclaw, --tier)
+- **Sanidade do pacote** — campos do package.json, entrada bin existe, shebang, imports ESM
 
-## GitHub Contributors
+## Contribuidores do GitHub
 
-When new PRs are merged, add the contributor's GitHub handle to the footer in `bin/free-coding-models.js` (the `Contributors:` line near line 775), separated by spaces. Also update this list:
+Quando novos PRs forem mesclados, adicione o identificador do GitHub do contribuidor ao rodapé em `bin/free-coding-models.js` (a linha `Contributors:` perto da linha 775), separados por espaços. Também atualize esta lista:
 
 - @whit3rabbit
 
-## Changelog (MANDATORY)
+## Registro de Alterações (OBRIGATÓRIO)
 
-**⚠️ CRITICAL:** After every dev session (feature, fix, refactor), add a succinct entry to `CHANGELOG.md` BEFORE pushing:
+**⚠️ CRÍTICO:** Após cada sessão de desenvolvimento (recurso, correção, refatoração), adicione uma entrada sucinta ao `CHANGELOG.md` ANTES de fazer o push:
 
-- Use the current version from `package.json`
-- Add under the matching version header (or create a new one if the version was bumped)
-- If the current version is already published, do **not** add new entries under that published version: create the **next** version header (example: `0.1.63` already published → document new work under `0.1.64`)
-- List changes under `### Added`, `### Fixed`, or `### Changed` as appropriate
-- Keep entries short — one line per change is enough
-- Keep the top release section clean and user-facing so it can be reused directly in the GitHub Release notes screen (clear bullets, no internal noise)
-- Include ALL changes made during the session
-- Update CHANGELOG.md BEFORE committing and pushing
+- Use a versão atual do `package.json`
+- Adicione sob o cabeçalho da versão correspondente (ou crie um novo se a versão foi incrementada)
+- Se a versão atual já estiver publicada, **não** adicione novas entradas sob essa versão publicada: crie o **próximo** cabeçalho de versão (exemplo: `0.1.63` já publicada → documente o novo trabalho sob `0.1.64`)
+- Liste as alterações sob `### Added`, `### Fixed` ou `### Changed` conforme apropriado
+- Mantenha as entradas curtas — uma linha por alteração é suficiente
+- Mantenha a seção de lançamento superior limpa e voltada para o usuário para que possa ser reutilizada diretamente na tela de notas de lançamento do GitHub (balas claras, sem ruído interno)
+- Inclua TODAS as alterações feitas durante a sessão
+- Atualize o CHANGELOG.md ANTES de fazer o commit e o push
 
-**Why this is critical:** The changelog is the only historical record of what was changed in each version. Without it, users cannot understand what changed between versions.
+**Por que isso é crítico:** O registro de alterações é o único registro histórico do que foi alterado em cada versão. Sem ele, os usuários não conseguem entender o que mudou entre as versões.
