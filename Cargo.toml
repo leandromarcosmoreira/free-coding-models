@@ -1,16 +1,31 @@
 [package]
 name = "free-coding-models"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }
-reqwest = { version = "0.12", features = ["json"] }
-ratatui = "0.26"
+clap = { version = "4.6", features = ["derive"] }
+reqwest = { version = "0.11", features = ["json", "stream"] }
+tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-clap = { version = "4.4", features = ["derive"] }
-chrono = "0.4"
-crossterm = "0.27"
-futures = "0.3"
-home = "0.5"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+crossterm = { version = "0.27", features = ["event-stream", "screen"] }
+ratatui = "0.28"
+anyhow = "1.0"
+toml = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1.0"
+rand = "0.8"
+flate2 = "1.0"
+zip = "0.6"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+debug = 2
